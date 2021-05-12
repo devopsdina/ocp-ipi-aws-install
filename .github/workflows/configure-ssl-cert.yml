@@ -1,0 +1,60 @@
+name: configure-ssl-cert-for-openshift-aws-route53
+
+on:
+  workflow_dispatch:
+    inputs:
+      email:
+        description: 'email to associate with certbot request'
+        required: true
+      domain:
+        description: 'domain to create cert for'
+        required: true
+
+jobs:
+  configure-ssl:
+    runs-on: macos-latest
+    steps:
+      - name: "Checkout ${{ github.ref }}"
+        uses: actions/checkout@master
+        with:
+          ref: ${{ github.ref }}
+
+      - name:  install certbot + aws-route53-extension
+        shell: bash
+        run: |
+          brew install certbot
+          pip3 install certbot-dns-route53
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        env:
+          aws_region: us-east-1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.aws_region }}
+
+      - name:  Run certbot against route53 to generate certs
+        shell: bash
+        run: |
+          certbot certonly \
+            --dns-route53 \
+            --config-dir ./certbot-config \
+            --logs-dir ./certbot/logs \
+            --work-dir ./certbot/work \
+            --agree-tos \
+            --non-interactive \
+            --email ${{ github.event.inputs.email }} \
+            -d "${{ github.event.inputs.domain }}"
+
+      - name: Install OpenShift CLI
+        uses: redhat-actions/oc-installer@v1
+
+      - name: Apply ssl cert against OpenShift
+        shell: bash
+        run: |
+          oc login -u ${{ secrets.OC_USER }} -p ${{ secrets.OC_PASSWORD }}
+          FULLCHAIN=$(ls ./certbot-config/live/*/fullchain.pem)
+          PRIVKEY=$(ls ./certbot-config/live/*/privkey.pem)
+          oc create secret tls router-certs --cert=$FULLCHAIN --key=$PRIVKEY -n openshift-ingress
+          oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec": { "defaultCertificate": { "name": "router-certs" }}}'

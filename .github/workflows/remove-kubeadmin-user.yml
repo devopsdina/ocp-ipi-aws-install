@@ -1,0 +1,27 @@
+name: remove-kubeadmin-user
+
+on:
+  workflow_dispatch:
+
+jobs:
+  remove-kubeadmin-user:
+    runs-on: macos-latest
+    steps:
+      - name: "Checkout ${{ github.ref }}"
+        uses: actions/checkout@master
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install OpenShift CLI
+        uses: redhat-actions/oc-installer@v1
+
+      - name: Use htpasswd as oauth, add OC_USER as cluster admin and removing kubeadmin user
+        shell: bash
+        run: |
+          oc login -u ${{ secrets.OCP_INIT_USER }} -p ${{ secrets.OC_INIT_PASSWORD }}
+          htpasswd -c -B -b users.htpasswd ${{ secrets.OC_USER }} ${{ secrets.OC_PASSWORD }}
+          oc create secret generic htpass-secret --from-file=htpasswd=./users.htpasswd> -n openshift-config
+          oc apply -f ./crd/htpasswd-oauth.yml
+          oc create clusterrolebinding registry-controller --clusterrole=cluster-admin --user=${{ secrets.OC_USER }}
+          oc adm policy add-cluster-role-to-user cluster-admin ${{ secrets.OC_USER }}
+          oc delete secrets kubeadmin -n kube-system

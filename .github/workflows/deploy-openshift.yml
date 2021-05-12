@@ -1,0 +1,211 @@
+name: deploy-openshift
+
+on: [push, workflow_dispatch]
+
+jobs:
+  deploy-ocp:
+    runs-on: macos-latest
+    env:
+      s3_storage: 'dina-s3-storage'
+      lcl_install_dir: "cluster-config-${{ github.run_number }}"
+      kubeconfig_path: "${{github.workspace}}/cluster-config-${{ github.run_number }}/auth/kubeconfig"
+
+    steps:
+      - name: "Checkout ${{ github.ref }}"
+        uses: actions/checkout@master
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install OpenShift CLI
+        uses: redhat-actions/oc-installer@v1
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        env:
+          aws_region: us-east-1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.aws_region }}
+
+      # - name: Create SSH key for cluster
+      #   shell: bash
+      #   run: |
+      #     echo "\n *** VARS USED IN THIS STEP *** "
+      #     echo "lcl_install_dir is: ${{ env.lcl_install_dir }}"
+      #     echo " ********************************* \n"
+      #     mkdir -p ./${{ env.lcl_install_dir }}/ssh-keys/
+      #     ssh-keygen -t rsa -b 4096 -q -N "" -f "./${{ env.lcl_install_dir }}/ssh-keys/${{ env.lcl_install_dir }}"
+      #     # aws s3 sync ./${{ env.lcl_install_dir }}/ssh-keys/ s3://${{ env.s3_storage }}/${{ env.lcl_install_dir }}/ssh-keys/
+
+      # - name: Parameterize install-config.yaml
+      #   shell: bash
+      #   env:
+      #     s3_config_path: "${{ env.s3_storage }}/ocp-install-configs"
+      #     replicas: 3
+      #     clusterName: "dina-ocp-${{ github.run_number }}"
+      #     hostPrefix: 23
+      #     networkType: 'OVNKubernetes'
+      #     region: 'us-east-1'
+      #   run: |
+      #     aws s3 cp s3://${{ env.s3_config_path }}/pull-secret.txt ./${{ env.lcl_install_dir }}/pull-secret.txt --region us-east-1 --quiet
+      #     export pullSecret=$(cat "./${{ env.lcl_install_dir }}/pull-secret.txt")
+      #     export sshKey=$(cat "./${{ env.lcl_install_dir }}/ssh-keys/${{ env.lcl_install_dir }}.pub")
+      #     export region=${{ env.region }}
+      #     export email=${{ secrets.EMAIL }}
+      #     export delete_by=NEVER
+      #     export always_up=false
+      #     export baseDomain=${{ secrets.baseDomain }}
+      #     export replicas=${{ env.replicas }}
+      #     export clusterName=${{ env.clusterName }}
+      #     export cidrClusterNetwork=${{ secrets.cidrClusterNetwork }}
+      #     export cidrMachineNetwork=${{ secrets.cidrMachineNetwork }}
+      #     export serviceNetwork=${{ secrets.serviceNetwork }}
+      #     envsubst < ./install-configs/install-config-template.yaml > ./${{ env.lcl_install_dir }}/install-config.yaml
+      #     aws s3 sync "./${{ env.lcl_install_dir }}/install-config.yaml" s3://${{ env.s3_storage }}/${{ env.lcl_install_dir }}/install-config.yaml
+
+      - name: Download OCP installer, config and update permissions
+        shell: bash
+        env:
+          s3_config_path: "${{ env.s3_storage }}/ocp-install-configs"
+          s3_installer_path: "${{ env.s3_storage }}/macos-installer"
+        run: |
+          echo "\n *** VARS USED IN THIS STEP *** "
+          echo "s3_storage is: ${{ env.s3_storage }}"
+          echo "s3_config_path is: ${{ env.s3_config_path }}"
+          echo "s3_installer_path is: ${{ env.s3_installer_path }}"
+          echo -e "lcl_install_dir is: ${{ env.lcl_install_dir }} \n"
+          echo " ********************************* \n"
+          mkdir ./${{ env.lcl_install_dir }}
+          echo "Downloading OpenShift Installer..."
+          aws s3 cp s3://${{ env.s3_installer_path }}/openshift-install ./openshift-install --region us-east-1 --quiet
+          echo "Update permissions to executable on the openshift-installer..."
+          chmod +rwx ./openshift-install
+          aws s3 cp s3://${{ env.s3_config_path }}/install-config.yaml ./${{ env.lcl_install_dir }}/install-config.yaml --region us-east-1 --quiet
+          echo "OCP_VERSION=$(./openshift-install version | head -n 1)" >> $GITHUB_ENV
+
+      - name: Create manifests
+        shell: bash
+        run: |
+          echo "\n *** VARS USED IN THIS STEP *** "
+          echo "lcl_install_dir is: ${{ env.lcl_install_dir }}"
+          echo " ********************************* \n"
+          echo "Create OpenShift manifests...\n"
+          ./openshift-install --dir=./${{ env.lcl_install_dir }} create manifests
+
+      - name: Verify cluster-network-03-config file exists
+        shell: bash
+        env:
+          s3_config_path: "${{ env.s3_storage }}/ocp-install-configs"
+        run: |
+          echo "\n *** VARS USED IN THIS STEP *** "
+          echo "s3_config_path is: ${{ env.s3_config_path }}"
+          echo -e "lcl_install_dir is: ${{ env.lcl_install_dir }} \n"
+          echo " ********************************* \n"
+          aws s3 cp s3://${{ env.s3_config_path }}/cluster-network-03-config.yml ./${{ env.lcl_install_dir }}/manifests/cluster-network-03-config.yml --region us-east-1 --quiet
+          if [ ! -f ./${{ env.lcl_install_dir }}/manifests/cluster-network-03-config.yml ]; then echo "cluster-network-03-config.yaml does not exist." exit 1; else echo "cluster-network-03-config.yaml exists, continuing deployment..."; fi
+
+      - name: Create ignition configs
+        shell: bash
+        run: |
+          echo "\n *** VARS USED IN THIS STEP *** "
+          echo -e "lcl_install_dir is: ${{ env.lcl_install_dir }} \n"
+          echo " ********************************* \n"
+          ./openshift-install create ignition-configs --dir=./${{ env.lcl_install_dir }}
+
+      - name: Run OCP installer - create cluster
+        shell: bash
+        run: | 
+          echo "Starting Install of $OCP_VERSION"
+          echo "Deployment ETA ~40 minutes..."
+           ./openshift-install --dir=./${{ env.lcl_install_dir }} create cluster --log-level=warn
+          echo "Uploading install files to S3 for: ${{ env.lcl_install_dir }}"
+          aws s3 sync ./${{ env.lcl_install_dir }} s3://${{ env.s3_storage }}/${{ env.lcl_install_dir }}
+
+      - name: Create SSH key for WMCO
+        shell: bash
+        run: |
+          echo "\n *** VARS USED IN THIS STEP *** "
+          echo "lcl_install_dir is: ${{ env.lcl_install_dir }}"
+          echo " ********************************* \n"
+          mkdir -p ./${{ env.lcl_install_dir }}/ssh-keys/
+          ssh-keygen -t rsa -b 4096 -m PEM -q -N "" -f "./${{ env.lcl_install_dir }}/ssh-keys/${{ env.lcl_install_dir }}-wmco"
+          aws s3 sync ./${{ env.lcl_install_dir }}/ssh-keys/ s3://${{ env.s3_storage }}/${{ env.lcl_install_dir }}/ssh-keys/
+
+      - name: Install WMCO
+        shell: bash
+        run: |
+          export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
+          oc create -f ./crd/wmco-namespace.yaml
+          oc create -f ./crd/wmco-og.yaml
+          oc create -f ./crd/wmco-sub.yaml
+          echo "verifying the WMCO installation:"
+          oc get csv -n openshift-windows-machine-config-operator
+
+      - name: Associate SSH key to WMCO
+        shell: bash
+        run: |
+          export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
+          oc create secret generic cloud-private-key --from-file=private-key.pem=./${{ env.lcl_install_dir }}/ssh-keys/${{ env.lcl_install_dir }}-wmco -n openshift-windows-machine-config-operator
+
+      - name: Deploy MachineSet for Windows
+        shell: bash
+        run: |
+          export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
+          export infrastructure_id=$(oc get -o jsonpath='{.status.infrastructureName}{"\n"}' infrastructure cluster)
+          export zone=us-east-1a
+          export email=${{ secrets.EMAIL }}
+          export windows_container_ami=ami-00878b15766f10fbf
+          export region=us-east-1
+          export delete_by=NEVER
+          export always_up=false
+          envsubst < ./crd/aws-machineset-win-template.yaml >> aws-machineset-win.yaml
+          oc create -f ./aws-machineset-win.yaml
+
+      - name: Remove kubeadmin user
+        shell: bash
+        run: |
+          export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
+          echo "KUBECONFIG env var is: $KUBECONFIG"
+          echo "Verify by running oc get nodes:"
+          oc get nodes
+          htpasswd -c -B -b ./users.htpasswd ${{ secrets.OC_USER }} ${{ secrets.OC_PASSWORD }}
+          oc create secret generic htpass-secret --from-file=htpasswd=./users.htpasswd -n openshift-config
+          oc apply -f ./crd/htpasswd-oauth.yml
+          oc create clusterrolebinding registry-controller --clusterrole=cluster-admin --user=${{ secrets.OC_USER }}
+          oc adm policy add-cluster-role-to-user cluster-admin ${{ secrets.OC_USER }}
+          oc delete secrets kubeadmin -n kube-system
+
+      - name:  install certbot + aws-route53-extension
+        shell: bash
+        run: |
+          brew install certbot
+          pip3 install certbot-dns-route53
+
+      - name:  Run certbot against route53 to generate certs
+        shell: bash
+        run: |
+          certbot certonly \
+            --dns-route53 \
+            --config-dir ./certbot-config \
+            --logs-dir ./certbot/logs \
+            --work-dir ./certbot/work \
+            --agree-tos \
+            --non-interactive \
+            --email ${{ secrets.EMAIL }} \
+            -d "${{ secrets.DOMAIN }}"
+
+      - name: Apply ssl cert against OpenShift
+        shell: bash
+        env:
+          fullchain_path: "${{github.workspace}}/certbot-config/live/*/fullchain.pem"
+          privkey_path: "${{github.workspace}}/certbot-config/live/*/privkey.pem"
+        run: |
+          export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
+          oc login -u ${{ secrets.OC_USER }} -p ${{ secrets.OC_PASSWORD }}
+          echo "fullchain_path is ${{ env.fullchain_path }}"
+          echo "privkey_path is ${{ env.privkey_path }}"
+          FULLCHAIN=$(ls ./${{ env.fullchain_path }})
+          PRIVKEY=$(ls ./${{ env.privkey_path }})
+          oc create secret tls router-certs --cert=$FULLCHAIN --key=$PRIVKEY -n openshift-ingress
+          oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec": { "defaultCertificate": { "name": "router-certs" }}}'
