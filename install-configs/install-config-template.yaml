@@ -1,0 +1,37 @@
+apiVersion: v1
+baseDomain: ${baseDomain}
+compute:
+- architecture: amd64
+  hyperthreading: Enabled
+  name: worker
+  platform: {}
+  replicas: ${replicas}
+controlPlane:
+  architecture: amd64
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: ${replicas}
+metadata:
+  creationTimestamp: null
+  name: ${clusterName}
+networking:
+  clusterNetwork:
+  - cidr: ${cidrClusterNetwork}
+    hostPrefix: ${hostPrefix}
+  machineNetwork:
+  - cidr: ${cidrMachineNetwork}
+  networkType: ${networkType}
+  serviceNetwork:
+  - ${serviceNetwork}
+platform:
+  aws:
+    region: ${region}
+    userTags:
+      admin: ${email}
+      DeleteBy: ${delete_by}
+      AlwaysUp: ${always_up}
+publish: External
+pullSecret: '${pullSecret}'
+sshKey: |
+  ${sshKey}
