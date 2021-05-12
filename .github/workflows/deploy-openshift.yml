@@ -1,6 +1,7 @@
 name: deploy-openshift
 
-on: [push, workflow_dispatch]
+on: [workflow_dispatch]
+# on: [push, workflow_dispatch]
 
 jobs:
   deploy-ocp:
@@ -176,36 +177,36 @@ jobs:
           oc adm policy add-cluster-role-to-user cluster-admin ${{ secrets.OC_USER }}
           oc delete secrets kubeadmin -n kube-system
 
-      - name:  install certbot + aws-route53-extension
-        shell: bash
-        run: |
-          brew install certbot
-          pip3 install certbot-dns-route53
+      # - name:  install certbot + aws-route53-extension
+      #   shell: bash
+      #   run: |
+      #     brew install certbot
+      #     pip3 install certbot-dns-route53
 
-      - name:  Run certbot against route53 to generate certs
-        shell: bash
-        run: |
-          certbot certonly \
-            --dns-route53 \
-            --config-dir ./certbot-config \
-            --logs-dir ./certbot/logs \
-            --work-dir ./certbot/work \
-            --agree-tos \
-            --non-interactive \
-            --email ${{ secrets.EMAIL }} \
-            -d "${{ secrets.DOMAIN }}"
+      # - name:  Run certbot against route53 to generate certs
+      #   shell: bash
+      #   run: |
+      #     certbot certonly \
+      #       --dns-route53 \
+      #       --config-dir ./certbot-config \
+      #       --logs-dir ./certbot/logs \
+      #       --work-dir ./certbot/work \
+      #       --agree-tos \
+      #       --non-interactive \
+      #       --email ${{ secrets.EMAIL }} \
+      #       -d "${{ secrets.DOMAIN }}"
 
-      - name: Apply ssl cert against OpenShift
-        shell: bash
-        env:
-          fullchain_path: "${{github.workspace}}/certbot-config/live/*/fullchain.pem"
-          privkey_path: "${{github.workspace}}/certbot-config/live/*/privkey.pem"
-        run: |
-          export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
-          oc login -u ${{ secrets.OC_USER }} -p ${{ secrets.OC_PASSWORD }}
-          echo "fullchain_path is ${{ env.fullchain_path }}"
-          echo "privkey_path is ${{ env.privkey_path }}"
-          FULLCHAIN=$(ls ./${{ env.fullchain_path }})
-          PRIVKEY=$(ls ./${{ env.privkey_path }})
-          oc create secret tls router-certs --cert=$FULLCHAIN --key=$PRIVKEY -n openshift-ingress
-          oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec": { "defaultCertificate": { "name": "router-certs" }}}'
+      # - name: Apply ssl cert against OpenShift
+      #   shell: bash
+      #   env:
+      #     fullchain_path: "${{github.workspace}}/certbot-config/live/*/fullchain.pem"
+      #     privkey_path: "${{github.workspace}}/certbot-config/live/*/privkey.pem"
+      #   run: |
+      #     export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
+      #     oc login -u ${{ secrets.OC_USER }} -p ${{ secrets.OC_PASSWORD }}
+      #     echo "fullchain_path is ${{ env.fullchain_path }}"
+      #     echo "privkey_path is ${{ env.privkey_path }}"
+      #     FULLCHAIN=$(ls ./${{ env.fullchain_path }})
+      #     PRIVKEY=$(ls ./${{ env.privkey_path }})
+      #     oc create secret tls router-certs --cert=$FULLCHAIN --key=$PRIVKEY -n openshift-ingress
+      #     oc patch ingresscontroller default -n openshift-ingress-operator --type=merge --patch='{"spec": { "defaultCertificate": { "name": "router-certs" }}}'
