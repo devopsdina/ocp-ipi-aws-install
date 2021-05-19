@@ -18,5 +18,4 @@ spec:
         hybridClusterNetwork: 
         - cidr: ${cidrhybridClusterNetwork}
           hostPrefix: ${hostPrefix}
-        hybridOverlayVXLANPort: ${hybridOverlayVXLANPort}
 status: {}

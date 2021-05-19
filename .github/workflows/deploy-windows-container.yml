@@ -1,0 +1,46 @@
+name: deploy-windows-container
+
+on:
+  workflow_dispatch:
+    inputs:
+      projectName:
+        description: 'Namespace in OpenShift where container will be deployed'
+        required: true
+        default: 'windows-workloads'
+      containerName:
+        description: 'Name of container'
+        required: true
+        default: 'win-webserver'
+      containerImage:
+        description: 'Image name and tag that is used for docker pull'
+        required: true
+        default: 'mcr.microsoft.com/windows/servercore:1809'
+
+jobs:
+  deploy-windows-container:
+    runs-on: macos-latest
+    env:
+      lcl_install_dir: ${{ github.event.inputs.clusterNamePrefix }}-${{ github.run_number }}
+
+    steps:
+      - name: "Checkout ${{ github.ref }}"
+        uses: actions/checkout@master
+        with:
+          ref: ${{ github.ref }}
+    
+      - name: Parameterize windows container
+        shell: bash
+        run: |
+          export projectName=${{ github.event.inputs.projectName }}
+          export containerName=${{ github.event.inputs.containerName }}
+          export containerImage=${{ github.event.inputs.containerImage }}
+          envsubst < ./crd/windows-container-template.yaml > ./${{ env.lcl_install_dir }}/windows-container.yaml
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        env:
+          aws_region: us-east-1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.aws_region }}
