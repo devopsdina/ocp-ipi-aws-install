@@ -8,7 +8,7 @@ Example GitHub Actions workflows to:
 - Removing the OpenShift Cluster from AWS, with the metadata files created during deployment.
 - Force removing the OpenShift Cluster from AWS, without any metadata files.
 
-S3 is used for file storage of the installer (which can be pulled from cloud.redhat.com), along with the pull secret.
+S3 is used for file storage of the installer (which can be sourced from cloud.redhat.com), along with the pull secret.
 
 S3 is used to store metadata for each run of the `deploy-openshift` workflow, assuming the installer completes successfully.
 
@@ -106,8 +106,6 @@ The following secrets set in the repository:
 ### `remove-cluster`
 
 This workflow will destroy the OpenShift cluster.  This workflow assumes you have the metadata files from the original deployment in an S3 bucket.
-
-**This job still needs to be tested**
 
 The following secrets set in the repository:
 _in order to pull the OpenShift installer and coressponding metadata files_
