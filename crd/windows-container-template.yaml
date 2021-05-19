@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: ${containerName}
+  name: ${containerName}
+  namespace: ${projectName}
+spec:
+  selector:
+    matchLabels:
+      app: ${containerName}
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ${containerName}
+      name: ${containerName}
+    spec:
+      containers:
+      - name: windowswebserver
+        image: ${containerImage}
+        imagePullPolicy: IfNotPresent
+        command:
+        - powershell.exe
+        - -command
+        - $listener = New-Object System.Net.HttpListener; $listener.Prefixes.Add('http://*:80/'); $listener.Start();Write-Host('Listening at http://*:80/'); while ($listener.IsListening) { $context = $listener.GetContext(); $response = $context.Response; $content='<html><body><H1>OpenShift for Windows Containers</H1></body></html>'; $buffer = [System.Text.Encoding]::UTF8.GetBytes($content); $response.ContentLength64 = $buffer.Length; $response.OutputStream.Write($buffer, 0, $buffer.Length); $response.Close(); };
+        securityContext:
+          windowsOptions:
+            runAsUserName: "ContainerAdministrator"
+      nodeSelector:
+        kubernetes.io/os: windows
+      tolerations:
+        - key: "os"
+          operator: "Equal"
+          value: "Windows"
+          effect: "NoSchedule"

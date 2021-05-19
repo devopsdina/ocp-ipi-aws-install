@@ -26,7 +26,7 @@ spec:
       providerSpec:
         value:
           ami:
-            id: ${windows_container_ami} 
+            id: ${windows_base_ami} 
           apiVersion: awsproviderconfig.openshift.io/v1beta1
           blockDevices:
             - ebs:
