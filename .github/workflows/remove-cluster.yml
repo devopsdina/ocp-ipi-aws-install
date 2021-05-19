@@ -50,7 +50,7 @@ jobs:
         run: |
           mkdir -p ./${{ env.temp_dir }}
           echo "Downloading ${{ github.event.inputs.clusterConfigName }} metadata files from S3..."
-          aws s3 cp s3://${{ github.event.inputs.s3_storage }}/${{ github.event.inputs.clusterConfigName }} ./${{ env.temp_dir }} --region us-east-1
+          aws s3 cp ./${{ env.temp_dir }} s3://${{ github.event.inputs.s3_storage }}/${{ github.event.inputs.clusterConfigName }} --region us-east-1 
 
       - name: Destroy cluster
         shell: bash
