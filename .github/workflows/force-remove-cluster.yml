@@ -50,7 +50,7 @@ jobs:
           mkdir -p ./${{ env.temp_dir }}
           mkdir -p ./${{ env.temp_dir }}/${{ github.event.inputs.clusterConfigName }}
           export ID=${RANDOM:0:10000}
-          export region=${{ github.event.inputs.region }}
+          export region=${{ github.event.inputs.aws_region }}
           export name=${{ github.event.inputs.clusterName }}
           envsubst < ./destroy-configs/metadata.json > ./${{ env.temp_dir }}/${{ github.event.inputs.clusterConfigName }}/metadata.json
 
