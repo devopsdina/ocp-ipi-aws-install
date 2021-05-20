@@ -3,10 +3,10 @@
     "clusterID": "",
     "infraID": "$ID",
     "aws": {
-      "region": "$region",
+      "region": "$aws_region",
       "identifier": [
         {
-          "kubernetes.io/cluster/${clusterName}": "owned"
+          "kubernetes.io/cluster/$clusterName": "owned"
         }
       ]
     }

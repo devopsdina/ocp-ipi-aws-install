@@ -108,7 +108,7 @@ The following secrets set in the repository:
 This workflow will destroy the OpenShift cluster.  This workflow assumes you have the metadata files from the original deployment in an S3 bucket.
 
 The following secrets set in the repository:
-_in order to pull the OpenShift installer and coressponding metadata files_
+_required to pull the OpenShift installer and corresponding metadata files_
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 
@@ -116,9 +116,7 @@ _in order to pull the OpenShift installer and coressponding metadata files_
 
 This workflow will destroy the OpenShift cluster.  This workflow does not rely on any metadata from the original deployment.  It is a destroy hack!
 
-**This job still needs to be tested**
-
 The following secrets set in the repository:
-_in order to pull the OpenShift installer_
+_required to pull the OpenShift installer_
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
