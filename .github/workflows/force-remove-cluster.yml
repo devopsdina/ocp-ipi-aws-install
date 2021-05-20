@@ -50,8 +50,8 @@ jobs:
           mkdir -p ./${{ env.temp_dir }}
           mkdir -p ./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}
           export ID=${RANDOM:0:10000}
-          export region="${{ github.event.inputs.aws_region }}"
-          export name="${{ github.event.inputs.clusterName }}"
+          export aws_region="${{ github.event.inputs.aws_region }}"
+          export clusterName="${{ github.event.inputs.clusterName }}"
           envsubst < ./destroy-configs/metadata.json > ./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}/metadata.json
 
       - name: verify metadata.json file
