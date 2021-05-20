@@ -6,10 +6,14 @@ on:
       clusterName:
         description: 'Short name of cluster INCLUDING unquie id (i.e. ocp-test-01-a4j8a'
         required: true
-      region:
+      aws_region:
         description: 'region in aws'
         required: true
         default: 'us-east-1'
+      s3_storage:
+        description: 'Name AWS S3 storage bucket'
+        required: true
+        default: 'dina-s3-storage'
 
 jobs:
   force-remove-openshift-cluster:
@@ -24,12 +28,10 @@ jobs:
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
-        env:
-          aws_region: us-east-1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.aws_region }}
+          aws-region: ${{ github.event.inputs.aws_region }}
 
       - name: Download OpenShift installer and update permissions
         shell: bash
@@ -38,7 +40,7 @@ jobs:
         run: |
           mkdir -p ./${{ env.temp_dir }}
           echo "Downloading OpenShift Installer..."
-          aws s3 cp s3://${{ env.s3_installer_path }}/openshift-install ./openshift-install --region us-east-1 --quiet
+          aws s3 cp s3://${{ env.s3_installer_path }}/openshift-install ./openshift-install --region ${{ github.event.inputs.aws_region }} --quiet
           echo "Update permissions to executable on the openshift-installer..."
           chmod +rwx ./openshift-install
 
