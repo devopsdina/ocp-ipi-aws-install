@@ -54,8 +54,13 @@ jobs:
           export name=${{ github.event.inputs.clusterName }}
           envsubst < ./destroy-configs/metadata.json > ./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}/metadata.json
 
+      - name: verify metadata.json file
+        shell: bash
+        run: |
+          cat ./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}/metadata.json
+
       - name: Destroy cluster
         shell: bash
         run: |
-           ./openshift-install destroy cluster --dir=./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}
+          ./openshift-install destroy cluster --dir=./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}
 
