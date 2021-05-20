@@ -48,14 +48,14 @@ jobs:
         shell: bash
         run: |
           mkdir -p ./${{ env.temp_dir }}
-          mkdir -p ./${{ env.temp_dir }}/${{ github.event.inputs.clusterConfigName }}
+          mkdir -p ./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}
           export ID=${RANDOM:0:10000}
           export region=${{ github.event.inputs.aws_region }}
           export name=${{ github.event.inputs.clusterName }}
-          envsubst < ./destroy-configs/metadata.json > ./${{ env.temp_dir }}/${{ github.event.inputs.clusterConfigName }}/metadata.json
+          envsubst < ./destroy-configs/metadata.json > ./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}/metadata.json
 
       - name: Destroy cluster
         shell: bash
         run: |
-           ./openshift-install destroy cluster --dir=./${{ env.temp_dir }}/${{ github.event.inputs.clusterConfigName }}
+           ./openshift-install destroy cluster --dir=./${{ env.temp_dir }}/${{ github.event.inputs.clusterName }}
 
