@@ -6,7 +6,7 @@
       "region": "$region",
       "identifier": [
         {
-          "kubernetes.io/cluster/${clusterName}": "owned"
+          "kubernetes.io/cluster/$clusterName": "owned"
         }
       ]
     }
