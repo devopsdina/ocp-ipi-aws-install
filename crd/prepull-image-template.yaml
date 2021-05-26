@@ -1,0 +1,38 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pre-pull-windows-docker-images
+  namespace: openshift-windows-machine-config-operator
+  labels:
+    run: pre-pull-windows-docker-images
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - command:
+        - /bin/bash
+        - -c
+        - |
+          ssh ${SSHOPTS} -i /tmp/ssh/private-key.pem ${SSHUSR}@${SSHHOST} docker pull ${NCIMAGE}
+        image: quay.io/redhatworkshops/winc-ssh:latest
+        name: prepull-image
+        env:
+        - name: NCIMAGE
+          value: "${containerImage}"
+        - name: SSHOPTS
+          value: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+        - name: SSHUSR
+          value: "Administrator"
+        - name: SSHHOST
+          value: "${windowsIP}"
+        volumeMounts:
+        - name: sshkey
+          mountPath: "/tmp/ssh"
+          readOnly: true
+        resources: {}
+      volumes:
+      - name: sshkey
+        secret:
+          secretName: ${sshkeySecretName}
+          defaultMode: 0400
