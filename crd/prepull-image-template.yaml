@@ -14,18 +14,18 @@ spec:
         - /bin/bash
         - -c
         - |
-          ssh ${SSHOPTS} -i /tmp/ssh/private-key.pem ${SSHUSR}@${SSHHOST} docker pull ${NCIMAGE}
+          ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -i /tmp/ssh/private-key.pem administrator@${windowsIP} docker pull ${containerImage}
         image: quay.io/redhatworkshops/winc-ssh:latest
         name: prepull-image
         env:
-        - name: NCIMAGE
-          value: ${containerImage}
+        - name: containerImage
+          value: '${containerImage}'
         - name: SSHOPTS
           value: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         - name: SSHUSR
           value: "Administrator"
-        - name: SSHHOST
-          value: ${windowsIP}
+        - name: windowsIP
+          value: '${windowsIP}'
         volumeMounts:
         - name: sshkey
           mountPath: "/tmp/ssh"
@@ -34,5 +34,5 @@ spec:
       volumes:
       - name: sshkey
         secret:
-          secretName: ${sshkeySecretName}
+          secretName: '${sshkeySecretName}'
           defaultMode: 0400
