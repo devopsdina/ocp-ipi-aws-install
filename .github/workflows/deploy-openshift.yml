@@ -178,7 +178,7 @@ jobs:
           oc create -f ./${{ env.lcl_install_dir }}/aws-machineset-win.yaml
           aws s3 sync ./${{ env.lcl_install_dir }}/ s3://${{ github.event.inputs.s3_storage }}/${{ env.lcl_install_dir }}/
 
-      - name: Pre-pull Windows container image
+      - name: Pre-pull Windows container image job
         shell: bash
         run: |
           export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
@@ -192,11 +192,9 @@ jobs:
         shell: bash
         run: |
           export KUBECONFIG=$(pwd)/${{ env.lcl_install_dir }}/auth/kubeconfig
-          export windowsIP=$(oc get node -l kubernetes.io/os=windows,node-role.kubernetes.io/worker -o json | jq -r '.items[0].status.addresses[0].address')
           export containerName='windows-demo-iis'
           export projectName='windows-workloads'
           export containerImage=${{ github.event.inputs.containerImage }}
-          export sshkeySecretName='cloud-private-key'
           envsubst < ./crd/windows-container-template.yaml >> ./${{ env.lcl_install_dir }}/windows-container.yaml
           oc new-project $projectName
           oc create -f ./${{ env.lcl_install_dir }}/windows-container.yaml

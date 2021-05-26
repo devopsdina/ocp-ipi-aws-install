@@ -19,13 +19,13 @@ spec:
         name: prepull-image
         env:
         - name: NCIMAGE
-          value: "${containerImage}"
+          value: ${containerImage}
         - name: SSHOPTS
           value: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
         - name: SSHUSR
           value: "Administrator"
         - name: SSHHOST
-          value: "${windowsIP}"
+          value: ${windowsIP}
         volumeMounts:
         - name: sshkey
           mountPath: "/tmp/ssh"

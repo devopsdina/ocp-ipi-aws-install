@@ -17,7 +17,7 @@ spec:
       name: ${containerName}
     spec:
       containers:
-      - name: windowswebserver
+      - name: ${containerName}
         image: ${containerImage}
         imagePullPolicy: IfNotPresent
         command:
