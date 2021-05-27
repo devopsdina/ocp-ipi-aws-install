@@ -35,6 +35,9 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
+      - name: Install OpenShift CLI
+        uses: redhat-actions/oc-installer@v1
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         env:
