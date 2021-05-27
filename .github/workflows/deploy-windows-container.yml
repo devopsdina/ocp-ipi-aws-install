@@ -65,3 +65,4 @@ jobs:
           export id=${{ github.run_number }}
           envsubst < ./crd/windows-container-template.yaml >> ./${{ env.temp_dir }}/windows-container.yaml
           oc apply -f ./${{ env.temp_dir }}/windows-container.yaml
+          oc wait --for=condition=complete --timeout=300s deployment/${{ github.event.inputs.containerName }}-${{ github.run_number }}
