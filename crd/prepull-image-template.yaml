@@ -18,14 +18,6 @@ spec:
         image: quay.io/redhatworkshops/winc-ssh:latest
         name: prepull-image
         env:
-        - name: containerImage
-          value: '${containerImage}'
-        - name: SSHOPTS
-          value: "-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
-        - name: SSHUSR
-          value: "Administrator"
-        - name: windowsIP
-          value: '${windowsIP}'
         volumeMounts:
         - name: sshkey
           mountPath: "/tmp/ssh"

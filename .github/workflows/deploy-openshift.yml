@@ -8,7 +8,7 @@ on:
         required: true
         default: 'dina-s3-storage'
       clusterNamePrefix:
-        description: 'cluster name prefix will get appended with the github run number'
+        description: 'cluster name prefix will get combined with the github run number'
         required: true
         default: 'dina-ocp'
       replicas:
