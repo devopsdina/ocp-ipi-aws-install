@@ -234,6 +234,7 @@ jobs:
           export windowsIP=$(oc get node -l kubernetes.io/os=windows,node-role.kubernetes.io/worker -o json | jq -r '.items[0].status.addresses[0].address')
           export containerImage=${{ github.event.inputs.containerImage }}
           export sshkeySecretName='cloud-private-key'
+          export id=${{ github.run_number }}
           envsubst < ./crd/prepull-image-template.yaml >> ./${{ env.lcl_install_dir }}/prepull-image.yaml
           oc project openshift-windows-machine-config-operator
           oc create -f ./${{ env.lcl_install_dir }}/prepull-image.yaml
@@ -245,6 +246,7 @@ jobs:
           export containerName='windows-demo-iis'
           export projectName='windows-workloads'
           export containerImage=${{ github.event.inputs.containerImage }}
+          export id=${{ github.run_number }}
           envsubst < ./crd/windows-container-template.yaml >> ./${{ env.lcl_install_dir }}/windows-container.yaml
           oc new-project $projectName
           oc create -f ./${{ env.lcl_install_dir }}/windows-container.yaml

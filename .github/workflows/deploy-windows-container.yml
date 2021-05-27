@@ -62,5 +62,6 @@ jobs:
           export projectName=${{ github.event.inputs.projectName }}
           export containerName=${{ github.event.inputs.containerName }}
           export containerImage=${{ github.event.inputs.containerImage }}
+          export id=${{ github.run_number }}
           envsubst < ./crd/windows-container-template.yaml >> ./${{ env.temp_dir }}/windows-container.yaml
           oc apply -f ./${{ env.temp_dir }}/windows-container.yaml

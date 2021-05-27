@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   labels:
     app: ${containerName}
-  name: ${containerName}
+  name: ${containerName}-${id}
   namespace: ${projectName}
 spec:
   selector:
@@ -14,10 +14,10 @@ spec:
     metadata:
       labels:
         app: ${containerName}
-      name: ${containerName}
+      name: ${containerName}-${id}
     spec:
       containers:
-      - name: ${containerName}
+      - name: ${containerName}-${id}
         image: ${containerImage}
         imagePullPolicy: IfNotPresent
         command:
