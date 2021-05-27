@@ -1,4 +1,4 @@
-name: prepull-windows-container
+name: prepull-windows-container-image
 
 on:
   workflow_dispatch:
@@ -20,7 +20,7 @@ on:
         required: true
 
 jobs:
-  prepull-windows-container:
+  prepull-windows-container-image:
     runs-on: macos-latest
     env:
       temp_dir: "temp-${{ github.run_number }}"
