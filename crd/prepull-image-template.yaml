@@ -1,10 +1,10 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: pre-pull-windows-docker-images
+  name: pre-pull-windows-image-${id}
   namespace: openshift-windows-machine-config-operator
   labels:
-    run: pre-pull-windows-docker-images
+    run: pre-pull-windows-image-${id}
 spec:
   template:
     spec:
