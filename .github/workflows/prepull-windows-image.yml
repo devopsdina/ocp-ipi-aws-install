@@ -24,7 +24,6 @@ jobs:
     runs-on: macos-latest
     env:
       temp_dir: "temp-${{ github.run_number }}"
-      kubeconfig_path: "${{github.workspace}}/${{ github.event.inputs.clusterConfigNames }}-${{ github.run_number }}/auth/kubeconfig"
 
     steps:
       - name: "Checkout ${{ github.ref }}"
