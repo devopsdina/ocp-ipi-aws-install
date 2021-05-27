@@ -57,6 +57,7 @@ jobs:
           export KUBECONFIG=$(pwd)/${{ env.temp_dir }}/auth/kubeconfig
           oc login -u ${{ secrets.OC_USER }} -p ${{ secrets.OC_PASSWORD }}
           export windowsIP=$(oc get node -l kubernetes.io/os=windows,node-role.kubernetes.io/worker -o json | jq -r '.items[0].status.addresses[0].address')
+          echo "windows IP is: $windowsIP"
           export containerImage=${{ github.event.inputs.containerImage }}
           export sshkeySecretName='cloud-private-key'
           envsubst < ./crd/prepull-image-template.yaml >> ./${{ env.temp_dir }}/prepull-image.yaml
