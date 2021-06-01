@@ -238,6 +238,7 @@ jobs:
           envsubst < ./crd/prepull-image-template.yaml >> ./${{ env.lcl_install_dir }}/prepull-image.yaml
           oc project openshift-windows-machine-config-operator
           oc create -f ./${{ env.lcl_install_dir }}/prepull-image.yaml
+          oc wait --for=condition=complete --timeout=900s job/pre-pull-windows-image-${{ github.run_number }}
 
       - name: Deploy Windows container
         shell: bash
