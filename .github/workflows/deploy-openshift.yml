@@ -177,6 +177,7 @@ jobs:
           envsubst < ./crd/aws-machineset-win-template.yaml >> ./${{ env.lcl_install_dir }}/aws-machineset-win.yaml
           oc create -f ./${{ env.lcl_install_dir }}/aws-machineset-win.yaml
           aws s3 sync ./${{ env.lcl_install_dir }}/ s3://${{ github.event.inputs.s3_storage }}/${{ env.lcl_install_dir }}/
+          until oc get machineset ${infrastructure_id}-windows-worker-${zone} -n openshift-machine-api -o json | jq -e '(.status.availableReplicas == 1)' | grep -m 1 'true'; do sleep 2; done
 
       - name: Remove kubeadmin user
         shell: bash
