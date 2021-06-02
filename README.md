@@ -2,7 +2,7 @@
 
 Example GitHub Actions workflows to:
 
-- Deploy an OpenShift Cluster configured for Windows Containers, including the WMCO and Windows MachineSet.
+- Deploy an OpenShift Cluster configured for Windows Containers, including the WMCO, Windows MachineSet and Windows container.
 - Configuring the final leg of the SSL certificate to remove the website warning, using certbot and route53.
 - Removing the kubeadmin user.
 - Removing the OpenShift Cluster from AWS, with the metadata files created during deployment.
