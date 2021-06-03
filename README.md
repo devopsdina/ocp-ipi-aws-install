@@ -12,6 +12,9 @@ S3 is used for file storage of the installer (which can be sourced from cloud.re
 
 S3 is used to store metadata for each run of the `deploy-openshift` workflow, assuming the installer completes successfully.
 
+**DISCLAIMER**
+This repo is not meant to demonstrate best practices or extensibility.  This repo is meant to show a low barrier to entry for automation in regards to deploying OpenShift with Windows Container support in AWS.
+
 ## Workflows
 ### `deploy-openshift.yml`
 
@@ -22,6 +25,8 @@ S3 is used to store metadata for each run of the `deploy-openshift` workflow, as
 - A Windows MachineSet is deployed using the public AWS ami: `ami-015451c8bbe8e7650`.  This will result in a `Windows_Server-2019-English-Full-ContainersLatest-2021.04.14` host machine.
 
 - The OpenShift cluster certificate, by default will encrypt traffic.  However it is not signed by a CA so it will appear insecure in the browser.  If you check the cert on [SSL checker](https://www.sslshopper.com/ssl-checker.html), it will show secure until the very end of the chain by default.  This job will finish securing the certificate by using Let's Encrypt via the route53 plugin.
+
+- A demo IIS container is deployed
 
 #### Requirements for `deploy-openshift.yml`
 
@@ -118,5 +123,16 @@ This workflow will destroy the OpenShift cluster.  This workflow does not rely o
 
 The following secrets set in the repository:
 _required to pull the OpenShift installer_
+- AWS_ACCESS_KEY_ID
+- AWS_SECRET_ACCESS_KEY
+
+### `prepull-windows-image`
+
+This workflow will prepull the Windows container image on the MachineSet.  Until the timeout is increased to 30 minutes for pulling an image, all Windows images need to be pull in advance of the actual container deployment
+
+This workflow assumes you have the metadata from the install and the ssh key used to configure the WMCO in S3 storage.
+
+The following secrets set in the repository:
+_required to pull the OpenShift metadata_
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
