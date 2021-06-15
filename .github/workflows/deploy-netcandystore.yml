@@ -12,7 +12,7 @@ on:
         required: true
 
 jobs:
-  deploy-windows-container:
+  deploy-netcandystore-containers:
     runs-on: macos-latest
     env:
       temp_dir: "temp-${{ github.run_number }}"
