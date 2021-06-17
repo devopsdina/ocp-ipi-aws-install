@@ -36,7 +36,7 @@ An AWS S3 Storage bucket with the following:
 - The OpenShift installer in a folder called `macos-installer`
 - The _matching_ pull secret for the installer in a folder called `ocp-install-configs`
 
-**The following secrets are set in the repository:**
+**The following secrets are set:**
 
 Used to login to AWS:
 - AWS_ACCESS_KEY_ID
@@ -72,20 +72,18 @@ An AWS S3 Storage bucket with the following:
 - S3 bucket with permissions set accordingly
 - The OpenShift metadata files
 
-**The following secrets are set in the repository:**
+The following secrets are used in this workflow:
 
-Used to login to AWS:
+_Used to login to AWS:_
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 
-Used for certificate configuration
-
+_Used for certificate configuration_
 - BASEDOMAIN
     - The base domain, usually your organizations or personal one.  Example: test.mycompany.com
 - EMAIL
 
-Used for oc login to apply certs:
-
+_Used for oc login to apply certs_:
 - OC_USER
 - OC_PASSWORD
 ### `remove-kubeadmin-user`
@@ -94,7 +92,7 @@ Removes the kubeadmin user, sets htpasswd as oauth and uses the OC_USER and OC_P
 
 **This job still needs to be tested**
 
-The following secrets set in the repository:
+The following secrets are used in this workflow:
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
 - BASEDOMAIN
@@ -112,7 +110,7 @@ The following secrets set in the repository:
 
 This workflow will destroy the OpenShift cluster.  This workflow assumes you have the metadata files from the original deployment in an S3 bucket.
 
-The following secrets set in the repository:
+The following secrets are used in this workflow:
 _required to pull the OpenShift installer and corresponding metadata files_
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
@@ -121,7 +119,7 @@ _required to pull the OpenShift installer and corresponding metadata files_
 
 This workflow will destroy the OpenShift cluster.  This workflow does not rely on any metadata from the original deployment.  It is a destroy hack!
 
-The following secrets set in the repository:
+The following secrets are used in this workflow:
 _required to pull the OpenShift installer_
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
@@ -132,7 +130,23 @@ This workflow will prepull the Windows container image on the MachineSet.  Until
 
 This workflow assumes you have the metadata from the install and the ssh key used to configure the WMCO in S3 storage.
 
-The following secrets set in the repository:
+The following secrets are used in this workflow:
 _required to pull the OpenShift metadata_
 - AWS_ACCESS_KEY_ID
 - AWS_SECRET_ACCESS_KEY
+
+### `deploy-netcandystore`
+
+Deploy the [NetCandy Store](http://people.redhat.com/chernand/windows-containers-quickstart/ns-intro/) a mixed environment consisting of Windows Containers and Linux Container using helm.
+
+This application consists of:
+
+- Windows Container running a .NET v4 frontend, which is consuming a backend service.
+- Linux Container running a .NET Core backend service, which is using a database.
+- Linux Container running a MSSql database.
+
+The following secrets are used in this workflow:
+- AWS_ACCESS_KEY_ID
+- AWS_SECRET_ACCESS_KEY
+- OC_USER
+- OC_PASSWORD
