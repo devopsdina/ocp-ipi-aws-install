@@ -48,7 +48,7 @@ jobs:
           export KUBECONFIG=$(pwd)/${{ env.temp_dir }}/auth/kubeconfig
           oc login -u ${{ secrets.OC_USER }} -p ${{ secrets.OC_PASSWORD }}
           echo "fetch netcandystore from people.redhat.com"
-          Helm fetch http://people.redhat.com/chernand/netcandystore-1.0.1.tgz
+          helm fetch http://people.redhat.com/chernand/netcandystore-1.0.1.tgz
           export WSSHKEY=$(oc get secret cloud-private-key -n openshift-windows-machine-config-operator -o jsonpath='{.data.private-key\.pem}') 
           export WNODE=$(oc get nodes -l kubernetes.io/os=windows -o jsonpath='{.items[0].metadata.name}')
           helm install ncs --namespace netcandystore --create-namespace --timeout=1200s ./netcandystore-1.0.1.tgz --set ssh.hostkey=${WSSHKEY} --set ssh.hostname=${WNODE}
